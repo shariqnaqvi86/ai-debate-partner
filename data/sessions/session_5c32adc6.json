@@ -1,0 +1,19 @@
+{
+  "session_id": "5c32adc6-cb47-47bf-93f2-74345ee32058",
+  "timestamp": "2026-07-16T22:46:45.805335+00:00",
+  "persona": "Law Enforcement (Abstinence / Zero-Tolerance)",
+  "topic": "Legalizing drug paraphenilla or decriminlinzing helped reduce crimes in washington and oregon",
+  "evidence_items": [],
+  "transcript": [
+    {
+      "role": "user",
+      "content": "legalizing drug paraphenilla or decriminlinzing helped reduce crimes in washington and oregon"
+    }
+  ],
+  "last_scores": {
+    "ethos": 0,
+    "logos": 0,
+    "pathos": 0
+  },
+  "last_flags": []
+}

@@ -1,0 +1,19 @@
+{
+  "session_id": "c87e267b-a2fe-485f-9e0d-a7b26aeca826",
+  "timestamp": "2026-07-16T22:08:25.342228+00:00",
+  "persona": "Public Health Official (Abstinence / Zero-Tolerance)",
+  "topic": "",
+  "evidence_items": [],
+  "transcript": [
+    {
+      "role": "user",
+      "content": "legalizing drug paraphenliaa is a bad idea"
+    }
+  ],
+  "last_scores": {
+    "ethos": 0,
+    "logos": 0,
+    "pathos": 0
+  },
+  "last_flags": []
+}

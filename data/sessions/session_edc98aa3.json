@@ -1,0 +1,19 @@
+{
+  "session_id": "edc98aa3-dbe7-4387-bade-540f9a2742a5",
+  "timestamp": "2026-07-16T21:18:03.165380+00:00",
+  "persona": "State Legislator (Abstinence / Zero-Tolerance)",
+  "topic": "Lets legalize paraphenlia",
+  "evidence_items": [],
+  "transcript": [
+    {
+      "role": "user",
+      "content": "lets legalize paraphenlia"
+    }
+  ],
+  "last_scores": {
+    "ethos": 0,
+    "logos": 0,
+    "pathos": 0
+  },
+  "last_flags": []
+}

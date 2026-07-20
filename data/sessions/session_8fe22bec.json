@@ -1,0 +1,23 @@
+{
+  "session_id": "8fe22bec-16fa-4a7a-a046-0b9ceaac539c",
+  "timestamp": "2026-07-16T21:36:53.805296+00:00",
+  "persona": "Public Health Official (Harm Reduction)",
+  "topic": "",
+  "evidence_items": [],
+  "transcript": [
+    {
+      "role": "user",
+      "content": "lets talk about legalizng drug paraphenilla"
+    },
+    {
+      "role": "user",
+      "content": "hi"
+    }
+  ],
+  "last_scores": {
+    "ethos": 0,
+    "logos": 0,
+    "pathos": 0
+  },
+  "last_flags": []
+}

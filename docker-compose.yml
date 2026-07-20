@@ -1,0 +1,13 @@
+services:
+  debate-coach:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: debate-coach
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

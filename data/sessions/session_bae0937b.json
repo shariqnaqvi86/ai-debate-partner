@@ -1,0 +1,19 @@
+{
+  "session_id": "bae0937b-b00a-431e-b533-73fa7cf78724",
+  "timestamp": "2026-07-16T22:56:14.430263+00:00",
+  "persona": "Law Enforcement (Abstinence / Zero-Tolerance)",
+  "topic": "",
+  "evidence_items": [],
+  "transcript": [
+    {
+      "role": "user",
+      "content": "hi"
+    }
+  ],
+  "last_scores": {
+    "ethos": 0,
+    "logos": 0,
+    "pathos": 0
+  },
+  "last_flags": []
+}

@@ -1,0 +1,27 @@
+{
+  "session_id": "1d5db106-c6da-4659-92c7-241c7c21e878",
+  "timestamp": "2026-07-16T22:49:32.654647+00:00",
+  "persona": "Law Enforcement (Abstinence / Zero-Tolerance)",
+  "topic": "",
+  "evidence_items": [],
+  "transcript": [
+    {
+      "role": "user",
+      "content": "hi i would like to debate about decriminilizing drug paraphenilla"
+    },
+    {
+      "role": "user",
+      "content": "hi"
+    },
+    {
+      "role": "user",
+      "content": "lets talk about syringe exchange"
+    }
+  ],
+  "last_scores": {
+    "ethos": 0,
+    "logos": 0,
+    "pathos": 0
+  },
+  "last_flags": []
+}

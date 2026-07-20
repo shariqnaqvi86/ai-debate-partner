@@ -1,0 +1,23 @@
+{
+  "session_id": "39893533-e52a-4ff4-a20a-50028c9e2db6",
+  "timestamp": "2026-07-16T22:51:42.369129+00:00",
+  "persona": "Public Health Official (Minimal Harm Reduction)",
+  "topic": "",
+  "evidence_items": [],
+  "transcript": [
+    {
+      "role": "user",
+      "content": "hi"
+    },
+    {
+      "role": "user",
+      "content": "hi"
+    }
+  ],
+  "last_scores": {
+    "ethos": 0,
+    "logos": 0,
+    "pathos": 0
+  },
+  "last_flags": []
+}
