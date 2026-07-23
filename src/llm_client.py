@@ -898,11 +898,11 @@ class LLMClient:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model_name: str = "gemini-2.5-flash",
+        model_name: Optional[str] = None,
         calls_per_minute: int = 15,
         cache_enabled: bool = True,
     ):
-        self.model_name = model_name
+        self.model_name = model_name or os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
         self.calls_per_minute = calls_per_minute
         self.cache_enabled = cache_enabled
 
@@ -923,7 +923,7 @@ class LLMClient:
         try:
             import google.generativeai as genai  # type: ignore
             genai.configure(api_key=resolved_key)
-            self._model = genai.GenerativeModel(model_name)
+            self._model = genai.GenerativeModel(self.model_name)
             self._sdk_available = True
         except ImportError as exc:
             raise ImportError(

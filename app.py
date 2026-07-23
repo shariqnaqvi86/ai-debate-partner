@@ -608,7 +608,9 @@ with col_chat:
                             ai_reply = ""
                         if not ai_reply:
                             st.session_state["reply_error"] = (
-                                "Gemini could not finish that reply. Please send the message again and I will try a shorter response."
+                                "Gemini request failed: "
+                                f"{generation_error or 'the service returned no text'}. "
+                                "Check Manage app > Logs for the full error."
                             )
                 if ai_reply:
                     thinking_placeholder.write(ai_reply)
