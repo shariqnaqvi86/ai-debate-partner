@@ -888,7 +888,7 @@ class LLMClient:
     """
     Google Gemini client with:
       - API key from GEMINI_API_KEY env var (or passed explicitly)
-      - Configurable model (default: gemini-1.5-flash)
+            - Configurable model (default: gemini-2.5-flash-lite)
       - 3-attempt exponential-backoff retry on transient errors
       - Per-minute rate limiting
       - In-process prompt/response cache (avoids duplicate API calls)
@@ -902,7 +902,7 @@ class LLMClient:
         calls_per_minute: int = 15,
         cache_enabled: bool = True,
     ):
-        self.model_name = model_name or os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+        self.model_name = model_name or os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite")
         self.calls_per_minute = calls_per_minute
         self.cache_enabled = cache_enabled
 
