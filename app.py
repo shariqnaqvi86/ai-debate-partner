@@ -25,6 +25,13 @@ from src.scoring import score_turn_with_llm, ScoringOutput
 from src.source_lookup import lookup_relevant_source_hits
 from src.storage import append_log, export_session
 load_dotenv(override=True)
+
+if not os.environ.get("GEMINI_API_KEY"):
+    try:
+        os.environ["GEMINI_API_KEY"] = st.secrets["GEMINI_API_KEY"]
+    except Exception:
+        pass
+
 # ─────────────────────────────────────────────
 # CONSTANTS
 # ─────────────────────────────────────────────
