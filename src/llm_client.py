@@ -869,8 +869,6 @@ class MockLLMClient:
                             f"I'd start with {source_bits[0]} and {source_bits[1]}. "
                             f"{source_bits[2]} is also useful if you want a broader policy or evidence review."
                         )
-            elif len(words) <= 5:
-                reply = _MOCK_SHORT_REPLY
             else:
                 if "Harm Reduction" in persona_key:
                     reply = _MOCK_HARM_REDUCTION_REPLIES[self._debate_idx % len(_MOCK_HARM_REDUCTION_REPLIES)]

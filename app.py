@@ -583,12 +583,11 @@ with col_chat:
                 )
             )
         )
-        if should_refresh_topic:
+        if should_refresh_topic or not st.session_state["debate_topic"]:
             inferred_topic = infer_debate_topic(st.session_state["transcript"], _llm)
-            if inferred_topic:
-                st.session_state["debate_topic"] = inferred_topic
-                st.session_state["topic_source"] = "inferred"
-                st.session_state["topic_strength"] = turn_strength
+            st.session_state["debate_topic"] = inferred_topic or user_input[:100]
+            st.session_state["topic_source"] = "inferred"
+            st.session_state["topic_strength"] = turn_strength or 1
 
         # 3. Generate AI stakeholder response (transcript already has the latest user turn)
         retrieved_source_hits = []

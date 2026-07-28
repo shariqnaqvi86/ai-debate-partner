@@ -255,8 +255,8 @@ def topic_turn_strength(text: str) -> int:
     Score whether a user turn looks like a real debate topic.
 
     Returns:
-        0 = not a topic / small talk
-        1 = plausible but weak topic signal
+        0 = bare greeting / small talk
+        1 = plausible topic signal / general claim
         2 = strong policy topic signal
     """
     cleaned = _normalise_whitespace(text)
@@ -274,23 +274,16 @@ def topic_turn_strength(text: str) -> int:
     if not lowered:
         return 0
 
+    words = re.findall(r"\b\w+\b", lowered)
+    if len(words) == 0:
+        return 0
+
     has_topic_signal = _has_topic_signal(lowered)
     has_policy_cue = _has_policy_cue(lowered)
-    words = re.findall(r"\b\w+\b", lowered)
 
-    if any(lowered.startswith(prefix) for prefix in _SMALL_TALK_PREFIXES):
-        if not has_topic_signal and not has_policy_cue:
-            return 0
-
-    if len(words) < 4 and not has_topic_signal and not has_policy_cue:
-        return 0
-    if has_policy_cue and has_topic_signal:
+    if has_policy_cue or has_topic_signal:
         return 2
-    if has_policy_cue and len(words) >= 6:
-        return 2
-    if has_topic_signal and ("?" in stripped or len(words) >= 8):
-        return 1
-    return 0
+    return 1
 
 
 def is_substantive_debate_turn(text: str) -> bool:
@@ -372,22 +365,20 @@ def _wants_structured_analysis(text: str) -> bool:
 
 
 def infer_debate_topic(transcript: list[dict], llm_client=None) -> Optional[str]:
-    """Infer and lock a debate topic from the most recent substantive user turn."""
+    """Infer and lock a debate topic from the most recent user turn."""
     candidate = next(
         (
             turn["content"]
             for turn in reversed(transcript)
-            if turn["role"] == "user" and is_substantive_debate_turn(turn["content"])
+            if turn["role"] == "user" and topic_turn_strength(turn["content"]) > 0
         ),
         "",
     )
     if not candidate:
-        return None
+        return "Public Health Policy & Implementation"
+    
     candidate = _strip_leading_fillers(candidate)
     heuristic_topic = _heuristic_topic_from_message(candidate)
-
-    if heuristic_topic and topic_turn_strength(candidate) >= 2:
-        return heuristic_topic
 
     client_info = {}
     if llm_client and hasattr(llm_client, "client_info"):
@@ -404,12 +395,12 @@ def infer_debate_topic(transcript: list[dict], llm_client=None) -> Optional[str]
                 max_output_tokens=64,
             )
             inferred = _clean_inferred_topic(raw)
-            if inferred and is_valid_topic_label(inferred):
+            if inferred and len(inferred.split()) >= 2:
                 return inferred
         except Exception:
             pass
 
-    return heuristic_topic
+    return heuristic_topic or candidate[:100]
 
 
 def _parse_persona_id(persona_id: str) -> tuple[str, str]:
@@ -573,12 +564,12 @@ def build_debate_prompt(
     else:
         topic_block = (
             "DEBATE TOPIC:\n"
-            "Not identified yet. The student has not stated a concrete policy issue.\n\n"
+            "Public Health Policy & Implementation\n\n"
         )
         response_instruction = (
-            "If the LAST STUDENT MESSAGE does not identify a concrete public-health issue, "
-            "ask one brief follow-up question to clarify the debate topic before making substantive claims. "
-            "Do not invent a scenario or evidence. Stay in character and keep the reply under 40 words."
+            "Respond directly to the LAST STUDENT MESSAGE by taking an active, clear, opposing or challenging policy stance in character. "
+            "Do not repeat previous responses and do not ask meta-questions like 'what policy would you like to debate'. "
+            "Immediately engage in character: state your argument, present a policy tradeoff, and challenge the student's premise in 3 sentences or fewer."
         )
 
     return (
