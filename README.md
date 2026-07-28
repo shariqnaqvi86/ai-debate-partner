@@ -79,7 +79,23 @@ docker compose up --build
 5. Open `http://localhost:8501`.
 6. Stop with `docker compose down` when done.
 
+## Deployment to Streamlit Community Cloud
+
+1. Push your repository to GitHub.
+2. Go to [share.streamlit.io](https://share.streamlit.io) and connect your GitHub repo.
+3. Set the Main file path to `app.py`.
+4. Under **Advanced settings** -> **Secrets**, add your Gemini API key:
+   ```toml
+   GEMINI_API_KEY = "your-actual-gemini-api-key"
+   ```
+5. Click **Deploy**! 
+
+*Note: If no API key is configured in Secrets, users can still enter their Gemini API key directly in the app's sidebar or explore using the offline Demo Mode.*
+
 ## Troubleshooting
+- **Token Truncation / Response Issues**:
+  - The app automatically salvages responses if token limits are reached and provides automatic retry fallbacks.
+  - You can select models (`gemini-2.0-flash`, `gemini-1.5-flash`) directly in the app sidebar.
 - Port `8501` already in use:
   - Stop the other process or change port mapping in `docker-compose.yml`.
 - Build fails during dependency install:
@@ -93,3 +109,4 @@ docker compose up --build
   ```bash
   docker compose logs -f
   ```
+

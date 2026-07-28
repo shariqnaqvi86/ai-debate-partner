@@ -423,7 +423,7 @@ def score_turn_with_llm(
     raw = ""
     last_exc: Exception = RuntimeError("No attempts made")
     attempts: list[tuple[str, str, int]] = [
-        ("primary", scoring_prompt, 360),
+        ("primary", scoring_prompt, 800),
     ]
 
     for attempt_name, prompt, token_cap in attempts:
@@ -437,7 +437,7 @@ def score_turn_with_llm(
 
     repair_prompt = _build_repair_prompt(scoring_prompt, raw)
     try:
-        raw = llm_client.generate(repair_prompt, temperature=0.0, max_output_tokens=280)
+        raw = llm_client.generate(repair_prompt, temperature=0.0, max_output_tokens=600)
         result = parse_scoring_response(raw)
         return _merge_local_stigma(result, last_user_turn)
     except Exception as exc:
@@ -446,7 +446,7 @@ def score_turn_with_llm(
 
     compact_prompt = _build_compact_retry_prompt(last_user_turn)
     try:
-        raw = llm_client.generate(compact_prompt, temperature=0.0, max_output_tokens=240)
+        raw = llm_client.generate(compact_prompt, temperature=0.0, max_output_tokens=500)
         result = parse_scoring_response(raw)
         return _merge_local_stigma(result, last_user_turn)
     except Exception as exc:

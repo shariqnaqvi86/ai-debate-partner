@@ -223,12 +223,12 @@ def _truncate_to_complete_sentences(text: str) -> str:
 
     sentence_endings = list(re.finditer(r'[.!?]["\')\]\}]*', stripped))
     if not sentence_endings:
-        return ""
+        return f"{stripped}." if len(stripped.split()) >= 4 else ""
 
     candidate = stripped[:sentence_endings[-1].end()].strip()
     if len(candidate.split()) < 4:
-        return ""
-    return candidate if _text_looks_complete(candidate) else ""
+        return f"{stripped}." if len(stripped.split()) >= 4 else ""
+    return candidate
 
 
 def _extract_retrieved_hits(prompt: str) -> list[tuple[str, str, str, str]]:
@@ -902,7 +902,7 @@ class LLMClient:
         calls_per_minute: int = 15,
         cache_enabled: bool = True,
     ):
-        self.model_name = model_name or os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite")
+        self.model_name = model_name or os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
         self.calls_per_minute = calls_per_minute
         self.cache_enabled = cache_enabled
 
@@ -1228,6 +1228,19 @@ class LLMClient:
                     return repaired
             except Exception as exc:
                 last_error = f"{last_error}; repair failed: {exc}"
+
+        if last_partial_text and last_partial_text.strip():
+            salvaged = _truncate_to_complete_sentences(last_partial_text)
+            if not salvaged:
+                salvaged = last_partial_text.strip()
+                if not salvaged.endswith((".", "?", "!")):
+                    salvaged += "."
+            salvaged = _finalize_source_reply(prompt, salvaged)
+            logger.warning("Salvaged partial Gemini reply after retry limit")
+            _log_call(self.model_name, len(prompt), True, prompt_hash=ph)
+            if self.cache_enabled:
+                self._cache[key] = salvaged  # type: ignore[possibly-undefined]
+            return salvaged
 
         _log_call(self.model_name, len(prompt), False, error=last_error, prompt_hash=ph)
         raise RuntimeError(f"LLMClient failed after 3 retries: {last_error}")

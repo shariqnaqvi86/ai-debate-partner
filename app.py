@@ -20,17 +20,11 @@ from src.debate import (
     topic_turn_strength,
 )
 from src.evidence import is_evidence_request
-from src.llm_client import LLMClient
+from src.llm_client import LLMClient, MockLLMClient
 from src.scoring import score_turn_with_llm, ScoringOutput
 from src.source_lookup import lookup_relevant_source_hits
 from src.storage import append_log, export_session
-load_dotenv(override=True)
-
-if not os.environ.get("GEMINI_API_KEY"):
-    try:
-        os.environ["GEMINI_API_KEY"] = st.secrets["GEMINI_API_KEY"]
-    except Exception:
-        pass
+load_dotenv(override=False)
 
 # ─────────────────────────────────────────────
 # CONSTANTS
@@ -448,34 +442,76 @@ with st.sidebar:
     )
 
 # ─────────────────────────────────────────────
-# LLM CLIENT INITIALIZATION
+# LLM CLIENT INITIALIZATION & RESOLUTION
 # ─────────────────────────────────────────────
 
-_api_key_present = bool(os.environ.get("GEMINI_API_KEY"))
-_gemini_unreachable_reason = ""
+def resolve_gemini_api_key() -> str:
+    # 1. Custom key entered in UI sidebar
+    if st.session_state.get("custom_api_key"):
+        key = st.session_state["custom_api_key"].strip()
+        if key and not key.startswith("AQ.Ab8RN"):
+            return key
+    # 2. Environment variable
+    env_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if env_key and not env_key.startswith("AQ.Ab8RN"):
+        return env_key
+    # 3. Streamlit Secrets
+    try:
+        if "GEMINI_API_KEY" in st.secrets:
+            sec_key = str(st.secrets["GEMINI_API_KEY"]).strip()
+            if sec_key and not sec_key.startswith("AQ.Ab8RN"):
+                return sec_key
+    except Exception:
+        pass
+    return ""
 
-if not _api_key_present:
-    _gemini_unreachable_reason = "GEMINI_API_KEY is not set."
-    with st.sidebar:
-        st.caption(f"Gemini status: Unreachable ({_gemini_unreachable_reason})")
-    st.error(f"Gemini is unreachable: {_gemini_unreachable_reason}")
-    st.stop()
+_resolved_key = resolve_gemini_api_key()
+_llm = None
+_using_mock = False
+_gemini_status_msg = ""
 
-try:
-    _llm = LLMClient()
-except Exception as e:
-    _gemini_unreachable_reason = str(e)
-    with st.sidebar:
-        st.caption(f"Gemini status: Unreachable ({_gemini_unreachable_reason})")
-    st.error(f"Gemini is unreachable: {_gemini_unreachable_reason}")
-    st.stop()
+if _resolved_key:
+    try:
+        selected_model = st.session_state.get("selected_gemini_model", "gemini-2.0-flash")
+        _llm = LLMClient(api_key=_resolved_key, model_name=selected_model)
+        _gemini_status_msg = f"Reachable ({selected_model})"
+    except Exception as exc:
+        _gemini_status_msg = f"Error: {exc}. Using Offline Mock."
+        _llm = MockLLMClient()
+        _using_mock = True
+else:
+    _gemini_status_msg = "No API key found. Using Offline Mock Mode."
+    _llm = MockLLMClient()
+    _using_mock = True
 
-_client_info = _llm.client_info()
-
-# Gemini status (sidebar)
 with st.sidebar:
-    st.caption("Gemini status: Reachable")
-    st.caption(f"Practice mode: {st.session_state['practice_mode']}")
+    st.divider()
+    st.subheader("🔑 API Key & Model")
+    user_key_input = st.text_input(
+        "Gemini API Key",
+        value=st.session_state.get("custom_api_key", ""),
+        type="password",
+        help="Paste your Google Gemini API key here. Get one free at https://aistudio.google.com/app/apikey",
+    )
+    if user_key_input != st.session_state.get("custom_api_key", ""):
+        st.session_state["custom_api_key"] = user_key_input
+        st.rerun()
+
+    model_options = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    current_model = st.session_state.get("selected_gemini_model", "gemini-2.0-flash")
+    if current_model not in model_options:
+        current_model = "gemini-2.0-flash"
+    new_model = st.selectbox("Gemini Model", model_options, index=model_options.index(current_model))
+    if new_model != st.session_state.get("selected_gemini_model"):
+        st.session_state["selected_gemini_model"] = new_model
+        st.rerun()
+
+    if _using_mock:
+        st.warning("⚠️ **Demo Mode Active** (Offline Mock LLM).\nProvide a valid Gemini API key above to enable live AI responses.")
+    else:
+        st.success(f"✅ **Live Gemini Active** ({st.session_state.get('selected_gemini_model', 'gemini-2.0-flash')})")
+
+    st.caption(f"Practice mode: **{st.session_state['practice_mode']}**")
 # ─────────────────────────────────────────────
 # MAIN LAYOUT — CHAT (LEFT) + DASHBOARD (RIGHT)
 
@@ -589,7 +625,7 @@ with col_chat:
                 thinking_placeholder.write("Thinking...")
                 with st.spinner("Thinking..."):
                     try:
-                        ai_reply = _llm.generate(prompt, temperature=0.5, max_output_tokens=1000)
+                        ai_reply = _llm.generate(prompt, temperature=0.5, max_output_tokens=1500)
                     except Exception as e:
                         generation_error = str(e)
                         ai_reply = ""
@@ -603,7 +639,7 @@ with col_chat:
                                 retrieved_source_hits=retrieved_source_hits,
                                 include_source_catalog=False,
                             )
-                            ai_reply = _llm.generate(fallback_prompt, temperature=0.5, max_output_tokens=800)
+                            ai_reply = _llm.generate(fallback_prompt, temperature=0.5, max_output_tokens=1200)
                         except Exception:
                             ai_reply = ""
                         if not ai_reply:
