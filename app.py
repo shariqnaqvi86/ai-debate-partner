@@ -466,23 +466,28 @@ def resolve_gemini_api_key() -> str:
     return ""
 
 _resolved_key = resolve_gemini_api_key()
-_llm = None
-_using_mock = False
-_gemini_status_msg = ""
+selected_model = st.session_state.get("selected_gemini_model", "gemini-2.0-flash")
 
-if _resolved_key:
-    try:
-        selected_model = st.session_state.get("selected_gemini_model", "gemini-2.0-flash")
-        _llm = LLMClient(api_key=_resolved_key, model_name=selected_model)
-        _gemini_status_msg = f"Reachable ({selected_model})"
-    except Exception as exc:
-        _gemini_status_msg = f"Error: {exc}. Using Offline Mock."
-        _llm = MockLLMClient()
-        _using_mock = True
-else:
-    _gemini_status_msg = "No API key found. Using Offline Mock Mode."
-    _llm = MockLLMClient()
-    _using_mock = True
+if (
+    "_llm_instance" not in st.session_state
+    or st.session_state.get("_llm_key") != _resolved_key
+    or st.session_state.get("_llm_model") != selected_model
+):
+    if _resolved_key:
+        try:
+            st.session_state["_llm_instance"] = LLMClient(api_key=_resolved_key, model_name=selected_model)
+            st.session_state["_using_mock"] = False
+        except Exception:
+            st.session_state["_llm_instance"] = MockLLMClient()
+            st.session_state["_using_mock"] = True
+    else:
+        st.session_state["_llm_instance"] = MockLLMClient()
+        st.session_state["_using_mock"] = True
+    st.session_state["_llm_key"] = _resolved_key
+    st.session_state["_llm_model"] = selected_model
+
+_llm = st.session_state["_llm_instance"]
+_using_mock = st.session_state.get("_using_mock", True)
 
 with st.sidebar:
     st.divider()

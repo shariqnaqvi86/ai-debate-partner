@@ -870,11 +870,18 @@ class MockLLMClient:
                             f"{source_bits[2]} is also useful if you want a broader policy or evidence review."
                         )
             else:
+                topic_snippet = f" regarding '{last_msg[:40]}...'" if len(last_msg) > 5 else ""
                 if "Harm Reduction" in persona_key:
-                    reply = _MOCK_HARM_REDUCTION_REPLIES[self._debate_idx % len(_MOCK_HARM_REDUCTION_REPLIES)]
+                    base_reply = _MOCK_HARM_REDUCTION_REPLIES[self._debate_idx % len(_MOCK_HARM_REDUCTION_REPLIES)]
                 else:
-                    reply = _MOCK_ZERO_TOLERANCE_REPLIES[self._debate_idx % len(_MOCK_ZERO_TOLERANCE_REPLIES)]
+                    base_reply = _MOCK_ZERO_TOLERANCE_REPLIES[self._debate_idx % len(_MOCK_ZERO_TOLERANCE_REPLIES)]
                 self._debate_idx += 1
+                if topic_snippet and "your proposal" in base_reply:
+                    reply = base_reply.replace("your proposal", f"your argument{topic_snippet}", 1)
+                elif topic_snippet and "your approach" in base_reply:
+                    reply = base_reply.replace("your approach", f"your approach{topic_snippet}", 1)
+                else:
+                    reply = base_reply
         ph = hashlib.sha256(prompt.encode()).hexdigest()[:16]
         _log_call(self.model_name, len(prompt), True, prompt_hash=ph)
         return reply
