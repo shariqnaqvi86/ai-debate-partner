@@ -533,7 +533,8 @@ def build_debate_prompt(
         topic_block = f"DEBATE TOPIC:\n{topic_text}\n\n"
         response_constraint_block = (
             "CONSTRAINT: Be concise. Keep responses under 3 sentences unless asked for an explanation. "
-            "Focus on counter-arguments and rebuttals.\n\n"
+            "PARAPHRASE CONSTRAINT: Do NOT quote the student's message verbatim or use template phrasing like 'How does your argument regarding [quote] account for...'. "
+            "Always paraphrase the student's claims conceptually into your own natural policy language.\n\n"
         )
         claim_traceability_instruction = (
             "Use only student-provided evidence or retrieved approved-source hits for causal or empirical claims. "

@@ -573,6 +573,9 @@ def _enforce_source_strict_claims(prompt: str, text: str) -> str:
             return _build_no_support_three_part_reply(base, prompt, closest_hits)
         return _to_reasoned_opinion(base)
 
+    if evidence_mode == "none":
+        return text
+
     if not _looks_empirical_claim(base):
         return text
     if has_allowed_url:
@@ -725,12 +728,47 @@ def _ensure_no_hit_admission(prompt: str, text: str) -> str:
     return f"{admission} {base}".strip()
 
 
+def _sanitize_verbatim_template_phrasing(text: str) -> str:
+    """
+    Post-processing guardrail: Strips verbatim template phrasing like
+    'How does your argument regarding [exact user quote] account for...'
+    and forces the response to refer to the policy position conceptually.
+    """
+    if not text:
+        return text
+    # Strip patterns matching: "regarding '[...]' ", "regarding "...""
+    cleaned = re.sub(
+        r"\bregarding\s+['\"`][^'\"`]+['\"`]\s*",
+        "regarding this policy approach ",
+        text,
+        flags=re.IGNORECASE,
+    )
+    # Strip "how does your argument regarding ... account for" template phrasing
+    cleaned = re.sub(
+        r"\bhow does your argument regarding\s+.*?\s+account for\b",
+        "How does your stance account for",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    # Strip "your argument regarding [anything]" -> "your position"
+    cleaned = re.sub(
+        r"\byour argument regarding\s+[^,.!?]+\b",
+        "your position",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    return cleaned
+
+
 def _finalize_source_reply(prompt: str, text: str) -> str:
     sanitized = _sanitize_response_urls(prompt, text)
-    substantive = _ensure_hybrid_substance(prompt, sanitized)
-    with_urls = _ensure_retrieved_hit_urls(prompt, substantive)
-    with_admission = _ensure_no_hit_admission(prompt, with_urls)
-    return _enforce_source_strict_claims(prompt, with_admission)
+    cleaned_phrasing = _sanitize_verbatim_template_phrasing(sanitized)
+    if "SOURCE STRICT MODE: ON" in prompt:
+        substantive = _ensure_hybrid_substance(prompt, cleaned_phrasing)
+        with_urls = _ensure_retrieved_hit_urls(prompt, substantive)
+        with_admission = _ensure_no_hit_admission(prompt, with_urls)
+        return _enforce_source_strict_claims(prompt, with_admission)
+    return cleaned_phrasing
 
 
 def _extract_openai_output_text(payload: dict) -> str:
@@ -870,18 +908,12 @@ class MockLLMClient:
                             f"{source_bits[2]} is also useful if you want a broader policy or evidence review."
                         )
             else:
-                topic_snippet = f" regarding '{last_msg[:40]}...'" if len(last_msg) > 5 else ""
                 if "Harm Reduction" in persona_key:
                     base_reply = _MOCK_HARM_REDUCTION_REPLIES[self._debate_idx % len(_MOCK_HARM_REDUCTION_REPLIES)]
                 else:
                     base_reply = _MOCK_ZERO_TOLERANCE_REPLIES[self._debate_idx % len(_MOCK_ZERO_TOLERANCE_REPLIES)]
                 self._debate_idx += 1
-                if topic_snippet and "your proposal" in base_reply:
-                    reply = base_reply.replace("your proposal", f"your argument{topic_snippet}", 1)
-                elif topic_snippet and "your approach" in base_reply:
-                    reply = base_reply.replace("your approach", f"your approach{topic_snippet}", 1)
-                else:
-                    reply = base_reply
+                reply = base_reply
         ph = hashlib.sha256(prompt.encode()).hexdigest()[:16]
         _log_call(self.model_name, len(prompt), True, prompt_hash=ph)
         return reply
