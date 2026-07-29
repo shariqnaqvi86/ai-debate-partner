@@ -556,10 +556,10 @@ def build_debate_prompt(
             )
         else:
             response_instruction = (
-                "Respond naturally to the LAST STUDENT MESSAGE, not to earlier turns. "
-                "Use 3 sentences or fewer, under 120 words. Make a clear policy stance, mention one tradeoff, and include one fair concern. "
-                "If you cannot cite a supporting URL, say 'based on policy and implementation tradeoffs' and avoid unsupported empirical claims. "
-                + claim_traceability_instruction
+                "You are a specialized Google Gem Policy Debate Partner. Speak directly, dynamically, and passionately in your persona. "
+                "Respond directly to the LAST STUDENT MESSAGE by taking a clear, articulate, opposing or challenging policy stance. "
+                "Do not break character, do not use robotic meta-disclaimers, and do not repeat previous turns. "
+                "Structure your response in 2–3 compelling sentences: state your counter-argument, point out a key policy tradeoff or implementation flaw, and end with a sharp counter-question to test the student's reasoning."
             )
     else:
         topic_block = (
@@ -567,6 +567,7 @@ def build_debate_prompt(
             "Public Health Policy & Implementation\n\n"
         )
         response_instruction = (
+            "You are a specialized Google Gem Policy Debate Partner. Speak directly, dynamically, and passionately in your persona. "
             "Respond directly to the LAST STUDENT MESSAGE by taking an active, clear, opposing or challenging policy stance in character. "
             "Do not repeat previous responses and do not ask meta-questions like 'what policy would you like to debate'. "
             "Immediately engage in character: state your argument, present a policy tradeoff, and challenge the student's premise in 3 sentences or fewer."
