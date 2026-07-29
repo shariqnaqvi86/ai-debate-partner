@@ -568,10 +568,13 @@ def build_debate_prompt(
             )
         else:
             response_instruction = (
-                "You are a specialized Google Gem Policy Debate Partner. Speak directly, dynamically, and passionately in your persona. "
-                "Respond directly to the LAST STUDENT MESSAGE by taking a clear, articulate, opposing or challenging policy stance. "
-                "Do not break character, do not use robotic meta-disclaimers, and do not repeat previous turns. "
-                "Structure your response in 2–3 compelling sentences: state your counter-argument, point out a key policy tradeoff or implementation flaw, and end with a sharp counter-question to test the student's reasoning."
+                "Take an EXPLICIT ADVERSARIAL STANCE against the student's argument in your assigned persona. "
+                "DO NOT echo or quote the student's message verbatim in Socratic questions. "
+                "DO NOT ask passive meta-questions. "
+                "You MUST follow this exact 3-part response structure for every turn:\n"
+                "1. REBUTTAL: Immediately open with a direct, assertive counter-claim attacking the core flaw or assumption in the student's position.\n"
+                "2. COUNTER-EVIDENCE / TRADEOFF: Present specific policy counter-evidence, real-world data trends, budget realities, or operational implementation tradeoffs that undermine their claim.\n"
+                "3. CHALLENGE QUESTION: End with a sharp, high-stakes challenge question requiring the student to defend their argument against a specific flaw or unintended consequence."
             )
     else:
         topic_block = (
@@ -579,10 +582,13 @@ def build_debate_prompt(
             "Public Health Policy & Implementation\n\n"
         )
         response_instruction = (
-            "You are a specialized Google Gem Policy Debate Partner. Speak directly, dynamically, and passionately in your persona. "
-            "Respond directly to the LAST STUDENT MESSAGE by taking an active, clear, opposing or challenging policy stance in character. "
-            "Do not repeat previous responses and do not ask meta-questions like 'what policy would you like to debate'. "
-            "Immediately engage in character: state your argument, present a policy tradeoff, and challenge the student's premise in 3 sentences or fewer."
+            "Take an EXPLICIT ADVERSARIAL STANCE against the student's argument in your assigned persona. "
+            "DO NOT echo or quote the student's message verbatim in Socratic questions. "
+            "DO NOT ask passive meta-questions. "
+            "You MUST follow this exact 3-part response structure for every turn:\n"
+            "1. REBUTTAL: Immediately open with a direct, assertive counter-claim attacking the core flaw or assumption in the student's position.\n"
+            "2. COUNTER-EVIDENCE / TRADEOFF: Present specific policy counter-evidence, real-world data trends, budget realities, or operational implementation tradeoffs that undermine their claim.\n"
+            "3. CHALLENGE QUESTION: End with a sharp, high-stakes challenge question requiring the student to defend their argument against a specific flaw or unintended consequence."
         )
 
     return (
