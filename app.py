@@ -23,7 +23,7 @@ from src.evidence import is_evidence_request
 from src.llm_client import LLMClient, MockLLMClient
 from src.scoring import score_turn_with_llm, ScoringOutput
 from src.source_lookup import lookup_relevant_source_hits
-from src.storage import append_log, export_session
+from src.storage import append_log, export_session, export_session_markdown
 from src.subagent import spin_off_research_subagent, get_synthesized_counter_evidence
 load_dotenv(override=False)
 
@@ -459,8 +459,24 @@ with st.sidebar:
                 st.rerun()
 
     st.divider()
-    # Export button
-    export_data = export_session(
+    st.subheader("📥 Download Debate")
+    md_data = export_session_markdown(
+        session_id=st.session_state["session_id"],
+        persona=st.session_state["persona"],
+        topic=st.session_state["debate_topic"],
+        transcript=st.session_state["transcript"],
+        scores=st.session_state["scores"],
+        flags=st.session_state["flags"],
+        rewrites=st.session_state["rewrites"],
+    )
+    st.download_button(
+        label="📄 Download Transcript (.md)",
+        data=md_data,
+        file_name=f"debate_transcript_{st.session_state['session_id'][:8]}.md",
+        mime="text/markdown",
+        use_container_width=True,
+    )
+    json_data = export_session(
         session_id=st.session_state["session_id"],
         persona=st.session_state["persona"],
         topic=st.session_state["debate_topic"],
@@ -470,10 +486,11 @@ with st.sidebar:
         last_flags=st.session_state["flags"],
     )
     st.download_button(
-        label="⬇️ Export Session JSON",
-        data=export_data,
+        label="📊 Export Session Data (.json)",
+        data=json_data,
         file_name=f"debate_session_{st.session_state['session_id'][:8]}.json",
         mime="application/json",
+        use_container_width=True,
     )
 
 # ─────────────────────────────────────────────

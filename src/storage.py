@@ -51,3 +51,39 @@ def export_session(
     with open(filepath, "w") as f:
         f.write(json_str)
     return json_str
+
+
+def export_session_markdown(
+    session_id: str,
+    persona: str,
+    topic: str,
+    transcript: list[dict],
+    scores: dict,
+    flags: list[dict] = None,
+    rewrites: list[str] = None,
+) -> str:
+    """Export transcript and coaching feedback as a human-readable Markdown file."""
+    lines = [
+        "# AI Debate Session Report",
+        f"**Date:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        f"**Session ID:** `{session_id}`",
+        f"**AI Persona:** {persona}",
+        f"**Debate Topic:** {topic or 'General Policy'}",
+        "\n---\n",
+        "## 📊 Persuasion Scores",
+        f"- **Ethos (Credibility):** {scores.get('ethos', 0)} / 100",
+        f"- **Logos (Logic & Evidence):** {scores.get('logos', 0)} / 100",
+        f"- **Pathos (Persuasion & Framing):** {scores.get('pathos', 0)} / 100",
+        "\n---\n",
+        "## 💬 Debate Transcript\n",
+    ]
+    for turn in transcript:
+        speaker = "Student" if turn["role"] == "user" else f"AI ({persona})"
+        lines.append(f"### {speaker}\n{turn['content']}\n")
+
+    if rewrites:
+        lines.append("---\n## 💡 Coaching Rewrites\n")
+        for i, rw in enumerate(rewrites, 1):
+            lines.append(f"{i}. {rw}")
+
+    return "\n".join(lines)
