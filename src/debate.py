@@ -432,6 +432,7 @@ def build_debate_prompt(
     retrieved_source_hits: list[dict] | None = None,
     include_source_catalog: bool = True,
     subagent_counter_research: dict | None = None,
+    debate_mode: str = "Adversary Mode",
 ) -> str:
     """
     Build a debate prompt for the given persona.
@@ -568,29 +569,51 @@ def build_debate_prompt(
                 + claim_traceability_instruction
             )
         else:
-            response_instruction = (
-                "Take an EXPLICIT ADVERSARIAL STANCE against the student's argument in your assigned persona. "
-                "DO NOT echo or quote the student's message verbatim in Socratic questions. "
-                "DO NOT ask passive meta-questions. "
-                "You MUST follow this exact 3-part response structure for every turn:\n"
-                "1. REBUTTAL: Immediately open with a direct, assertive counter-claim attacking the core flaw or assumption in the student's position.\n"
-                "2. COUNTER-EVIDENCE / TRADEOFF: Present specific policy counter-evidence, real-world data trends, budget realities, or operational implementation tradeoffs that undermine their claim.\n"
-                "3. CHALLENGE QUESTION: End with a sharp, high-stakes challenge question requiring the student to defend their argument against a specific flaw or unintended consequence."
-            )
+            if debate_mode == "Socratic Mode":
+                response_instruction = (
+                    "Take a SOCRATIC DEBATE STANCE in your assigned persona. "
+                    "DO NOT give passive opinions or agree passively. "
+                    "Ask 2–3 deep, probing policy questions that test the student's internal consistency, operational feasibility, and hidden assumptions. "
+                    "Challenge them to reconcile conflicting values or consequences in their stance."
+                )
+            elif debate_mode == "Steel-Manning Mode":
+                response_instruction = (
+                    "Take a STEEL-MANNING DEBATE STANCE in your assigned persona. "
+                    "Follow this exact 3-part response structure:\n"
+                    "1. STEEL-MAN: First, articulate the strongest, most compelling version of the student's argument, strengthening their best evidence or moral point.\n"
+                    "2. SURGICAL REFUTATION: Present a sharp, fundamental policy flaw or counter-evidence tradeoff that even their strongest version fails to resolve.\n"
+                    "3. CHALLENGE QUESTION: End with a high-stakes challenge question testing their position against this core flaw."
+                )
+            else:  # Adversary Mode
+                response_instruction = (
+                    "Take an EXPLICIT ADVERSARIAL STANCE against the student's argument in your assigned persona. "
+                    "DO NOT echo or quote the student's message verbatim in Socratic questions. "
+                    "DO NOT ask passive meta-questions. "
+                    "You MUST follow this exact 3-part response structure for every turn:\n"
+                    "1. REBUTTAL: Immediately open with a direct, assertive counter-claim attacking the core flaw or assumption in the student's position.\n"
+                    "2. COUNTER-EVIDENCE / TRADEOFF: Present specific policy counter-evidence, real-world data trends, budget realities, or operational implementation tradeoffs that undermine their claim.\n"
+                    "3. CHALLENGE QUESTION: End with a sharp, high-stakes challenge question requiring the student to defend their argument against a specific flaw or unintended consequence."
+                )
     else:
         topic_block = (
             "DEBATE TOPIC:\n"
             "Public Health Policy & Implementation\n\n"
         )
-        response_instruction = (
-            "Take an EXPLICIT ADVERSARIAL STANCE against the student's argument in your assigned persona. "
-            "DO NOT echo or quote the student's message verbatim in Socratic questions. "
-            "DO NOT ask passive meta-questions. "
-            "You MUST follow this exact 3-part response structure for every turn:\n"
-            "1. REBUTTAL: Immediately open with a direct, assertive counter-claim attacking the core flaw or assumption in the student's position.\n"
-            "2. COUNTER-EVIDENCE / TRADEOFF: Present specific policy counter-evidence, real-world data trends, budget realities, or operational implementation tradeoffs that undermine their claim.\n"
-            "3. CHALLENGE QUESTION: End with a sharp, high-stakes challenge question requiring the student to defend their argument against a specific flaw or unintended consequence."
-        )
+        if debate_mode == "Socratic Mode":
+            response_instruction = (
+                "Take a SOCRATIC DEBATE STANCE in your assigned persona. "
+                "Ask 2–3 deep, probing policy questions that test the student's internal consistency and hidden assumptions."
+            )
+        elif debate_mode == "Steel-Manning Mode":
+            response_instruction = (
+                "Take a STEEL-MANNING DEBATE STANCE in your assigned persona. "
+                "First articulate the strongest version of their claim, then present a surgical refutation and challenge question."
+            )
+        else:
+            response_instruction = (
+                "Take an EXPLICIT ADVERSARIAL STANCE against the student's argument in your assigned persona. "
+                "Follow the 3-part structure: REBUTTAL -> COUNTER-EVIDENCE / TRADEOFF -> CHALLENGE QUESTION."
+            )
 
     subagent_research_block = ""
     if subagent_counter_research and subagent_counter_research.get("synthesized_rebuttal_points"):

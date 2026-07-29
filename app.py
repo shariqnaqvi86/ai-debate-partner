@@ -255,6 +255,19 @@ def build_persona_label(role: str, orientation: str) -> str:
     return f"{role} ({orientation})"
 
 
+DEBATE_MODES = [
+    "Adversary Mode",
+    "Socratic Mode",
+    "Steel-Manning Mode",
+]
+
+DEBATE_MODE_DESCRIPTIONS = {
+    "Adversary Mode": "Presents strong counter-arguments, attacks logical flaws, and pushes back aggressively in character.",
+    "Socratic Mode": "Asks probing policy questions, examines underlying assumptions, and tests internal consistency.",
+    "Steel-Manning Mode": "First articulates and strengthens the best version of your argument, then presents a surgical refutation.",
+}
+
+
 # ─────────────────────────────────────────────
 # SESSION STATE INIT
 # ─────────────────────────────────────────────
@@ -271,6 +284,7 @@ def init_state():
         "role": ROLE_OPTIONS[0],
         "orientation": ORIENTATION_OPTIONS[0],
         "persona": build_persona_label(ROLE_OPTIONS[0], ORIENTATION_OPTIONS[0]),
+        "debate_mode": DEBATE_MODES[0],
         "practice_mode": "Open practice",
         "scoring_rationale": {},
         "debate_topic": "",
@@ -352,6 +366,14 @@ with st.sidebar:
             "- **Harm Reduction:** a comprehensive public-health approach that prioritizes continuity of care, risk mitigation, and evidence-based interventions to reduce morbidity and mortality.  \n"
             "- **Abstinence / Zero-Tolerance:** a prevention-first posture that emphasizes clear behavioral expectations, enforcement, and messaging aimed at discouraging substance use."
         )
+    new_debate_mode = st.selectbox(
+        "Debate Mode",
+        DEBATE_MODES,
+        index=DEBATE_MODES.index(st.session_state.get("debate_mode", DEBATE_MODES[0])),
+        key="debate_mode_select",
+    )
+    st.caption(f"_{DEBATE_MODE_DESCRIPTIONS.get(new_debate_mode, '')}_")
+
     practice_modes = [
         "Open practice",
         "Affirmative claim practice",
@@ -359,6 +381,10 @@ with st.sidebar:
         "Evidence sourcing practice",
     ]
     new_practice_mode = st.selectbox("Practice mode", practice_modes, key="practice_mode_select")
+
+    if new_debate_mode != st.session_state.get("debate_mode"):
+        st.session_state["debate_mode"] = new_debate_mode
+        st.session_state["scoring_note"] = f"Switched to {new_debate_mode}."
 
     if new_role != st.session_state["role"] or new_orientation != st.session_state["orientation"]:
         st.session_state["role"] = new_role
@@ -637,6 +663,7 @@ with col_chat:
             st.session_state["evidence_items"],
             retrieved_source_hits=retrieved_source_hits,
             subagent_counter_research=subagent_counter_research,
+            debate_mode=st.session_state["debate_mode"],
         )
 
         generation_error = ""
@@ -662,6 +689,7 @@ with col_chat:
                                 st.session_state["evidence_items"],
                                 retrieved_source_hits=retrieved_source_hits,
                                 include_source_catalog=False,
+                                debate_mode=st.session_state["debate_mode"],
                             )
                             ai_reply = _llm.generate(fallback_prompt, temperature=0.5, max_output_tokens=1200)
                         except Exception:
