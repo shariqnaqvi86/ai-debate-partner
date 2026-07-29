@@ -24,6 +24,7 @@ from src.llm_client import LLMClient, MockLLMClient
 from src.scoring import score_turn_with_llm, ScoringOutput
 from src.source_lookup import lookup_relevant_source_hits
 from src.storage import append_log, export_session
+from src.subagent import spin_off_research_subagent, get_synthesized_counter_evidence
 load_dotenv(override=False)
 
 # ─────────────────────────────────────────────
@@ -619,12 +620,23 @@ with col_chat:
             except Exception:
                 retrieved_source_hits = []
 
+        # Spin off background research subagent for counter perspectives
+        spin_off_research_subagent(
+            session_id=st.session_state["session_id"],
+            user_claim=user_input,
+            persona_id=st.session_state["persona"],
+            debate_topic=st.session_state["debate_topic"],
+            transcript=st.session_state["transcript"],
+        )
+        subagent_counter_research = get_synthesized_counter_evidence(st.session_state["session_id"])
+
         prompt = build_debate_prompt(
             st.session_state["persona"],
             st.session_state["debate_topic"],
             st.session_state["transcript"],
             st.session_state["evidence_items"],
             retrieved_source_hits=retrieved_source_hits,
+            subagent_counter_research=subagent_counter_research,
         )
 
         generation_error = ""

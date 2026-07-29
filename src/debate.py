@@ -431,6 +431,7 @@ def build_debate_prompt(
     evidence_items: list[dict],
     retrieved_source_hits: list[dict] | None = None,
     include_source_catalog: bool = True,
+    subagent_counter_research: dict | None = None,
 ) -> str:
     """
     Build a debate prompt for the given persona.
@@ -591,6 +592,13 @@ def build_debate_prompt(
             "3. CHALLENGE QUESTION: End with a sharp, high-stakes challenge question requiring the student to defend their argument against a specific flaw or unintended consequence."
         )
 
+    subagent_research_block = ""
+    if subagent_counter_research and subagent_counter_research.get("synthesized_rebuttal_points"):
+        points = "\n".join(f"  • {pt}" for pt in subagent_counter_research["synthesized_rebuttal_points"])
+        subagent_research_block = (
+            f"SUBAGENT SYNTHESIZED COUNTER-RESEARCH:\n{points}\n\n"
+        )
+
     return (
         f"[turn-id:{fingerprint}]\n"
         f"ACTIVE PERSONA:\n{key}\n\n"
@@ -600,6 +608,7 @@ def build_debate_prompt(
         f"EVIDENCE PROVIDED BY THE STUDENT:\n{evidence_block or 'None yet.'}\n\n"
         f"{evidence_mode_block}"
         f"{retrieved_hits_block}"
+        f"{subagent_research_block}"
         f"{source_catalog_block}"
         f"CONVERSATION SO FAR:\n{history}\n\n"
         f"LAST STUDENT MESSAGE:\n{last_user_msg}\n\n"
