@@ -220,6 +220,10 @@ ROLE_OPTIONS = [
     "Law Enforcement",
     "Clinician",
     "Community Advocate",
+    "Federal Drug Policy Czar",
+    "City Mayor / Local Official",
+    "Policy Analyst / Bioethicist",
+    "Custom Persona",
 ]
 ORIENTATION_OPTIONS = [
     "Minimal Harm Reduction",
@@ -233,6 +237,10 @@ ROLE_DESCRIPTIONS = {
     "Law Enforcement": "A public safety leader concerned with enforcement, order, community trust, and operational impacts.",
     "Clinician": "A healthcare provider who prioritizes patient safety, treatment access, and real-world clinical outcomes.",
     "Community Advocate": "A grassroots voice that centers lived experience, stigma reduction, and neighborhood-level impact.",
+    "Federal Drug Policy Czar": "A high-level federal executive managing national drug strategy, interagency coordination, and federal funding.",
+    "City Mayor / Local Official": "A municipal leader balancing public safety, economic vitality, local business concerns, and public health.",
+    "Policy Analyst / Bioethicist": "An academic researcher evaluating policy ethics, systemic tradeoffs, cost-benefit models, and evidence validity.",
+    "Custom Persona": "Define your own custom AI debate stakeholder role.",
 }
 
 ORIENTATION_DESCRIPTIONS = {
