@@ -518,7 +518,8 @@ def resolve_gemini_api_key() -> str:
     return ""
 
 _resolved_key = resolve_gemini_api_key()
-selected_model = st.session_state.get("selected_gemini_model", "gemini-2.0-flash")
+default_model_setting = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite")
+selected_model = st.session_state.get("selected_gemini_model", default_model_setting)
 
 if (
     "_llm_instance" not in st.session_state
@@ -560,16 +561,16 @@ with st.sidebar:
             env_path = os.path.join(os.path.dirname(__file__), ".env")
             with open(env_path, "w") as f:
                 f.write(f"GEMINI_API_KEY={user_key_input.strip()}\n")
-                f.write(f"GEMINI_MODEL={st.session_state.get('selected_gemini_model', 'gemini-2.0-flash')}\n")
+                f.write(f"GEMINI_MODEL={st.session_state.get('selected_gemini_model', default_model_setting)}\n")
             os.environ["GEMINI_API_KEY"] = user_key_input.strip()
         except Exception:
             pass
         st.rerun()
 
-    model_options = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
-    current_model = st.session_state.get("selected_gemini_model", "gemini-2.0-flash")
+    model_options = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    current_model = st.session_state.get("selected_gemini_model", default_model_setting)
     if current_model not in model_options:
-        current_model = "gemini-2.0-flash"
+        current_model = "gemini-2.5-flash-lite"
     new_model = st.selectbox("Gemini Model", model_options, index=model_options.index(current_model))
     if new_model != st.session_state.get("selected_gemini_model"):
         st.session_state["selected_gemini_model"] = new_model
@@ -581,7 +582,7 @@ with st.sidebar:
             st.error(f"⚠️ **API Key Error**: {err_msg}")
         st.warning("⚠️ **Demo Mode Active** (Offline Mock LLM).\nProvide a valid Gemini API key above to enable live AI responses.")
     else:
-        st.success(f"✅ **Live Gemini Active** ({st.session_state.get('selected_gemini_model', 'gemini-2.0-flash')})")
+        st.success(f"✅ **Live Gemini Active** ({st.session_state.get('selected_gemini_model', default_model_setting)})")
 
     st.caption(f"Practice mode: **{st.session_state['practice_mode']}**")
 # ─────────────────────────────────────────────

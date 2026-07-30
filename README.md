@@ -95,7 +95,7 @@ docker compose up --build
 ## Troubleshooting
 - **Token Truncation / Response Issues**:
   - The app automatically salvages responses if token limits are reached and provides automatic retry fallbacks.
-  - You can select models (`gemini-2.0-flash`, `gemini-1.5-flash`) directly in the app sidebar.
+  - You can select models (`gemini-2.5-flash-lite`, `gemini-2.5-flash`, `gemini-1.5-flash`, `gemini-1.5-pro`) directly in the app sidebar or set via `GEMINI_MODEL`.
 - Port `8501` already in use:
   - Stop the other process or change port mapping in `docker-compose.yml`.
 - Build fails during dependency install:

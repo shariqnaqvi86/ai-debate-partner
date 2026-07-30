@@ -939,7 +939,7 @@ class LLMClient:
         calls_per_minute: int = 15,
         cache_enabled: bool = True,
     ):
-        self.model_name = model_name or os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+        self.model_name = model_name or os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite")
         self.calls_per_minute = calls_per_minute
         self.cache_enabled = cache_enabled
 
