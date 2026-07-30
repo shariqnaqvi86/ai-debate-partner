@@ -990,12 +990,16 @@ class LLMClient:
         prompt: str,
         temperature: float,
         max_output_tokens: int,
+        override_model: Optional[str] = None,
+        disable_tools: bool = False,
     ):
+        target_model = override_model or self.model_name
         if getattr(self, "_using_new_sdk", False):
             types = self._genai_types
             is_json_prompt = "Output RAW JSON only" in prompt or "[topic-extractor]" in prompt
-            if is_json_prompt:
+            if is_json_prompt or disable_tools:
                 config = types.GenerateContentConfig(
+                    system_instruction=DEBATE_SYSTEM_INSTRUCTION if not is_json_prompt else None,
                     temperature=temperature,
                     max_output_tokens=max_output_tokens,
                 )
@@ -1007,7 +1011,7 @@ class LLMClient:
                     max_output_tokens=max_output_tokens,
                 )
             return self._client.models.generate_content(
-                model=self.model_name,
+                model=target_model,
                 contents=prompt,
                 config=config,
             )
@@ -1294,6 +1298,47 @@ class LLMClient:
 
             except Exception as exc:
                 last_error = str(exc)
+                is_quota_error = "429" in last_error or "RESOURCE_EXHAUSTED" in last_error or "quota" in last_error.lower()
+                if is_quota_error:
+                    logger.warning("Gemini 429 RESOURCE_EXHAUSTED detected on model %s. Executing automatic fallback...", self.model_name)
+                    # 1. Try Fallback to gemini-3.5-flash-lite
+                    if self.model_name != "gemini-3.5-flash-lite":
+                        try:
+                            fb_resp = self._raw_generate_content(
+                                prompt,
+                                temperature=temperature,
+                                max_output_tokens=max_output_tokens,
+                                override_model="gemini-3.5-flash-lite",
+                            )
+                            fb_text = _extract_response_text(fb_resp)
+                            if fb_text.strip():
+                                fb_text = _finalize_source_reply(prompt, fb_text)
+                                logger.info("Successfully recovered from 429 using gemini-3.5-flash-lite fallback")
+                                if self.cache_enabled:
+                                    self._cache[key] = fb_text  # type: ignore[possibly-undefined]
+                                return fb_text
+                        except Exception as exc_fb1:
+                            logger.warning("Fallback 1 to gemini-3.5-flash-lite failed (%s)", exc_fb1)
+
+                    # 2. Try Fallback without Search Grounding tools (lowest quota cost)
+                    try:
+                        fb_resp = self._raw_generate_content(
+                            prompt,
+                            temperature=temperature,
+                            max_output_tokens=max_output_tokens,
+                            override_model="gemini-3.5-flash-lite",
+                            disable_tools=True,
+                        )
+                        fb_text = _extract_response_text(fb_resp)
+                        if fb_text.strip():
+                            fb_text = _finalize_source_reply(prompt, fb_text)
+                            logger.info("Successfully recovered from 429 using gemini-3.5-flash-lite without search tools")
+                            if self.cache_enabled:
+                                self._cache[key] = fb_text  # type: ignore[possibly-undefined]
+                            return fb_text
+                    except Exception as exc_fb2:
+                        last_error = f"{last_error}; Fallbacks failed: {exc_fb2}"
+
                 backoff = 2 ** attempt
                 logger.warning(
                     "Gemini attempt %d/3 failed (%s) — retrying in %ds",

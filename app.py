@@ -728,11 +728,18 @@ with col_chat:
                         except Exception:
                             ai_reply = ""
                         if not ai_reply:
-                            st.session_state["reply_error"] = (
-                                "Gemini request failed: "
-                                f"{generation_error or 'the service returned no text'}. "
-                                "Check Manage app > Logs for the full error."
-                            )
+                            if "429" in generation_error or "RESOURCE_EXHAUSTED" in generation_error or "quota" in generation_error.lower():
+                                st.session_state["reply_error"] = (
+                                    "⚠️ **Google Gemini Quota Limit Reached (429 RESOURCE_EXHAUSTED)**.\n"
+                                    "Your API key reached its current rate limit. Try selecting **gemini-3.5-flash-lite** in the sidebar "
+                                    "or wait 60 seconds for your free tier quota window to reset."
+                                )
+                            else:
+                                st.session_state["reply_error"] = (
+                                    "Gemini request failed: "
+                                    f"{generation_error or 'the service returned no text'}. "
+                                    "Check Manage app > Logs for the full error."
+                                )
                 if ai_reply:
                     thinking_placeholder.write(ai_reply)
                 elif generation_error:
