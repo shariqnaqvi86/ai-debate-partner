@@ -921,6 +921,15 @@ class MockLLMClient:
 
 # ── Real Gemini client ───────────────────────────────────────────────────────
 
+DEBATE_SYSTEM_INSTRUCTION = """You are an expert debate partner. Your primary mandate is to construct logical, well-grounded counterarguments backed by empirical facts, statistics, and credible research. 
+
+RULES:
+1. You MUST use the Google Search tool to look up actual evidence, public health studies, legal precedent, or real-world policy outcomes before responding to user claims.
+2. NEVER invent facts, statistics, or sources. If empirical data is unavailable or inconclusive, state that clearly.
+3. Directly address the opponent's core arguments (e.g., commercialization vs. harm reduction, infrastructure burdens, and evidence-based treatment).
+4. Maintain a structured debate tone: state your thesis, support it with searched evidence/citations, and directly counter the user's points."""
+
+
 class LLMClient:
     """
     Google Gemini client with:
@@ -958,21 +967,66 @@ class LLMClient:
             )
 
         try:
-            import google.generativeai as genai  # type: ignore
-            genai.configure(api_key=resolved_key)
-            self._model = genai.GenerativeModel(self.model_name)
+            from google import genai
+            from google.genai import types
+            self._client = genai.Client(api_key=resolved_key)
+            self._genai_types = types
+            self._using_new_sdk = True
             self._sdk_available = True
-        except ImportError as exc:
-            raise ImportError(
-                "google-generativeai is not installed. "
-                "Run: pip install google-generativeai"
-            ) from exc
+        except ImportError:
+            try:
+                import google.generativeai as genai_legacy  # type: ignore
+                genai_legacy.configure(api_key=resolved_key)
+                self._model = genai_legacy.GenerativeModel(self.model_name)
+                self._using_new_sdk = False
+                self._sdk_available = True
+            except ImportError as exc:
+                raise ImportError(
+                    "Neither google-genai nor google-generativeai is installed."
+                ) from exc
+
+    def _raw_generate_content(
+        self,
+        prompt: str,
+        temperature: float,
+        max_output_tokens: int,
+    ):
+        if getattr(self, "_using_new_sdk", False):
+            types = self._genai_types
+            is_json_prompt = "Output RAW JSON only" in prompt or "[topic-extractor]" in prompt
+            if is_json_prompt:
+                config = types.GenerateContentConfig(
+                    temperature=temperature,
+                    max_output_tokens=max_output_tokens,
+                )
+            else:
+                config = types.GenerateContentConfig(
+                    system_instruction=DEBATE_SYSTEM_INSTRUCTION,
+                    tools=[types.Tool(google_search=types.GoogleSearch())],
+                    temperature=temperature,
+                    max_output_tokens=max_output_tokens,
+                )
+            return self._client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=config,
+            )
+        else:
+            return self._model.generate_content(
+                prompt,
+                generation_config={
+                    "temperature": temperature,
+                    "max_output_tokens": max_output_tokens,
+                },
+            )
 
     def client_info(self) -> dict:
         return {
             "client": "gemini",
             "model": self.model_name,
             "api_key_present": True,
+            "using_google_genai_sdk": getattr(self, "_using_new_sdk", False),
+            "search_grounding": True,
             "web_search_enabled": self._openai_web_search_enabled,
             "web_search_model": self._openai_web_model if self._openai_web_search_enabled else "",
         }
@@ -1070,12 +1124,10 @@ class LLMClient:
         )
 
         self._rate_limit()
-        response = self._model.generate_content(
+        response = self._raw_generate_content(
             repair_prompt,
-            generation_config={
-                "temperature": 0.1,
-                "max_output_tokens": 120,
-            },
+            temperature=0.1,
+            max_output_tokens=120,
         )
         repaired = _extract_response_text(response)
         finish_reason = _extract_finish_reason(response)
@@ -1103,12 +1155,10 @@ class LLMClient:
         )
 
         self._rate_limit()
-        response = self._model.generate_content(
+        response = self._raw_generate_content(
             continue_prompt,
-            generation_config={
-                "temperature": max(0.1, float(temperature) - 0.1),
-                "max_output_tokens": min(120, max_output_tokens),
-            },
+            temperature=max(0.1, float(temperature) - 0.1),
+            max_output_tokens=min(120, max_output_tokens),
         )
         continued = _extract_response_text(response)
         finish_reason = _extract_finish_reason(response)
@@ -1173,12 +1223,10 @@ class LLMClient:
         for attempt in range(3):
             t0 = time.time()
             try:
-                response = self._model.generate_content(
+                response = self._raw_generate_content(
                     prompt,
-                    generation_config={
-                        "temperature": temperature,
-                        "max_output_tokens": max_output_tokens,
-                    },
+                    temperature=temperature,
+                    max_output_tokens=max_output_tokens,
                 )
                 result = _extract_response_text(response)
                 finish_reason = _extract_finish_reason(response)

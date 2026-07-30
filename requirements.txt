@@ -1,5 +1,6 @@
 streamlit
 plotly
 google-generativeai
+google-genai
 python-dotenv
 pydantic>=2,<3
