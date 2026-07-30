@@ -518,7 +518,7 @@ def resolve_gemini_api_key() -> str:
     return ""
 
 _resolved_key = resolve_gemini_api_key()
-default_model_setting = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite")
+default_model_setting = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 selected_model = st.session_state.get("selected_gemini_model", default_model_setting)
 
 if (
@@ -567,10 +567,10 @@ with st.sidebar:
             pass
         st.rerun()
 
-    model_options = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    model_options = ["gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro", "gemini-2.5-flash"]
     current_model = st.session_state.get("selected_gemini_model", default_model_setting)
     if current_model not in model_options:
-        current_model = "gemini-2.5-flash-lite"
+        current_model = "gemini-3.6-flash"
     new_model = st.selectbox("Gemini Model", model_options, index=model_options.index(current_model))
     if new_model != st.session_state.get("selected_gemini_model"):
         st.session_state["selected_gemini_model"] = new_model
