@@ -555,6 +555,15 @@ with st.sidebar:
     )
     if user_key_input != st.session_state.get("custom_api_key", ""):
         st.session_state["custom_api_key"] = user_key_input
+        # Automatically save key to .env for persistence
+        try:
+            env_path = os.path.join(os.path.dirname(__file__), ".env")
+            with open(env_path, "w") as f:
+                f.write(f"GEMINI_API_KEY={user_key_input.strip()}\n")
+                f.write(f"GEMINI_MODEL={st.session_state.get('selected_gemini_model', 'gemini-2.0-flash')}\n")
+            os.environ["GEMINI_API_KEY"] = user_key_input.strip()
+        except Exception:
+            pass
         st.rerun()
 
     model_options = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
