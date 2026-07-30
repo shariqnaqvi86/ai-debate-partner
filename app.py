@@ -501,17 +501,17 @@ def resolve_gemini_api_key() -> str:
     # 1. Custom key entered in UI sidebar
     if st.session_state.get("custom_api_key"):
         key = st.session_state["custom_api_key"].strip()
-        if key and not key.startswith("AQ.Ab8RN"):
+        if key:
             return key
     # 2. Environment variable
     env_key = os.environ.get("GEMINI_API_KEY", "").strip()
-    if env_key and not env_key.startswith("AQ.Ab8RN"):
+    if env_key:
         return env_key
     # 3. Streamlit Secrets
     try:
         if "GEMINI_API_KEY" in st.secrets:
             sec_key = str(st.secrets["GEMINI_API_KEY"]).strip()
-            if sec_key and not sec_key.startswith("AQ.Ab8RN"):
+            if sec_key:
                 return sec_key
     except Exception:
         pass
@@ -529,12 +529,15 @@ if (
         try:
             st.session_state["_llm_instance"] = LLMClient(api_key=_resolved_key, model_name=selected_model)
             st.session_state["_using_mock"] = False
-        except Exception:
+            st.session_state["_llm_error"] = ""
+        except Exception as e:
             st.session_state["_llm_instance"] = MockLLMClient()
             st.session_state["_using_mock"] = True
+            st.session_state["_llm_error"] = str(e)
     else:
         st.session_state["_llm_instance"] = MockLLMClient()
         st.session_state["_using_mock"] = True
+        st.session_state["_llm_error"] = "No API Key provided."
     st.session_state["_llm_key"] = _resolved_key
     st.session_state["_llm_model"] = selected_model
 
@@ -564,6 +567,9 @@ with st.sidebar:
         st.rerun()
 
     if _using_mock:
+        err_msg = st.session_state.get("_llm_error", "")
+        if err_msg and err_msg != "No API Key provided.":
+            st.error(f"⚠️ **API Key Error**: {err_msg}")
         st.warning("⚠️ **Demo Mode Active** (Offline Mock LLM).\nProvide a valid Gemini API key above to enable live AI responses.")
     else:
         st.success(f"✅ **Live Gemini Active** ({st.session_state.get('selected_gemini_model', 'gemini-2.0-flash')})")
